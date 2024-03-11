@@ -27,5 +27,9 @@ const skuSchema = new Schema({
         required: false
     }
 });
+skuSchema.set('autoIndex', false)
+skuSchema.index({sku:'text',lot:'text'})
+const skuIndex = mongoose.model('Sku', skuSchema)
+skuIndex.createIndexes()
 
 module.exports = mongoose.model('Sku', skuSchema);

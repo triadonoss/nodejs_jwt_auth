@@ -1,8 +1,25 @@
 const Sku = require('../model/Sku');
 
 const getAllSkus = async (req, res) => {
-    const skus = await Sku.find();
+
+    let qry =  { $text: { $search: (req.params?.search)?req.params.search:'', $caseSensitive: false } }
+    
+    let totalSku = await Sku.find().estimatedDocumentCount()
+    let skus = await Sku.find().limit(10).exec()
+
+    /* if(req.params.id <= 1){
+        skus = await Sku.find(qry).limit(10).exec()
+        totalSku = await Sku.find(qry).limit(10).estimatedDocumentCount()
+    }else if(req.params.id ==2){
+        skus = await Sku.find(qry).limit(10).skip(10).exec()
+        totalSku = await Sku.find(qry).limit(10).skip(10).estimatedDocumentCount()
+    }else{
+        skus = await Sku.find(qry).limit(10).skip(req.params.id*10).exec()
+        totalSku = await Sku.find(qry).limit(10).skip(req.params.id*10).estimatedDocumentCount()
+    } */
+        
     if (!skus) return res.status(204).json({ 'message': 'No sku found.' });
+    res.set('Total-Docs',`${totalSku}`)
     res.json(skus);
 }
 
@@ -58,12 +75,17 @@ const deleteSku = async (req, res) => {
 }
 
 const getSku = async (req, res) => {
-    if (!req?.params?.id) return res.status(400).json({ 'message': 'Sku ID required.' });
+    //if (!req?.params?.id) return res.status(400).json({ 'message': 'Sku ID required.' });
 
-    const sku = await Sku.findOne({ _id: req.params.id }).exec();
+    let qry = { $text: { $search: req.params.id, $caseSensitive: false } }
+    if (!req?.params?.id) return res.status(400).json({ 'message': 'Sku ID required.' });
+    let totalSku = await Sku.find(qry).countDocuments()
+    //const sku = await Sku.findOne({ _id: req.params.id }).exec();
+    const sku = await Sku.find(qry).exec();
     if (!sku) {
         return res.status(204).json({ "message": `No sku matches ID ${req.params.id}.` });
     }
+    res.set('Total-Docs',`${totalSku}`)
     res.json(sku);
 }
 
